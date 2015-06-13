@@ -1,0 +1,205 @@
+---
+title: "Assignment 4 - Decision Tree"
+author: "Keith G. Williams - 800690755"
+date: "Friday, June 12, 2015"
+output: word_document
+---
+
+## Problem Description
+
+A company sent out some promotion to various houses and recorded a few facts about each house and also whether the people responded or not. Please create a Decision Tree (similar to one discussed in class) for the dataset below. 
+
+```{r, echo=FALSE}
+district <- factor(c('suburban', 'suburban', 'rural', rep('urban', 3), 'rural',
+                     'suburban', 'suburban','urban', 'suburban', 'rural',
+                     'rural', 'urban'))
+house_type <- factor(c(rep('detached', 3), rep('semi-detached', 4), 'terrace',
+                       'semi-detached', rep('terrace', 3), 'detached', 
+                       'terrace'))
+income <- factor(c(rep('high', 4), rep('low', 3), 'high', rep('low', 3), 'high',
+                   'low', 'high'))
+previous_customer <- factor(c('no', 'yes', rep('no', 3), 'yes', 'yes', 
+                              rep('no', 3), 'yes', 'yes', 'no', 'yes'))
+outcome <- factor(c('nothing', 'nothing', rep('responded', 3), 'nothing',
+                    'responded', 'nothing', rep('responded', 5), 'nothing'))
+promo = data.frame(district = district,
+                   house_type = house_type,
+                   income = income,
+                   previous_customer = previous_customer,
+                   outcome = outcome)
+promo
+```
+
+## Information Content *I(C;F)* Calculations
+
+Each node will be split based on the information content calculation:  
+$$I(C;F) = \sum\limits_{i=1}^m \sum\limits_{j=1}^d P(C = c_i, F = f_j) log_2 \frac{P(C = c_i, F = f_j)}{P(C = c_i)P(F = f_j)}$$  
+where C is the class (in this cases `outcome`), and F is the feature matrix (in this case `district`, `house_type`, `income`, `previous_customer`)
+
+```{r, echo=FALSE}
+ic <- function(n, p, i, j) {
+    return(p / n * log2((p * n) / (i * j)))
+}
+```
+
+### First Node
+
+$I(outcome, district) =$  
+$$\begin{aligned}
+P(outcome = nothing, district = suburban) log_2 \frac{P(outcome = nothing, district = suburban)}{P(outcome = nothing)P(district = suburban)} \\
++ P(outcome = nothing, district = rural) log_2 \frac{P(outcome = nothing, district = rural)}{P(outcome = nothing)P(district = rural)} \\
++ P(outcome = nothing, district = urban) log_2 \frac{P(outcome = nothing, district = urban)}{P(outcome = nothing)P(district = urban)} \\
++ P(outcome = responded, district = suburban) log_2 \frac{P(outcome = responded, district = suburban)}{P(outcome = responded)P(district = suburban)} \\
++ P(outcome = responded, district = rural) log_2 \frac{P(outcome = responded, district = rural)}{P(outcome = responded)P(district = rural)} \\
++ P(outcome = responded, district = urban) log_2 \frac{P(outcome = responded, district = urban)}{P(outcome = responded)P(district = urban)} \\
+= \frac{3}{14} log_2 \frac{\frac{3}{14}}{\frac{5}{14}\frac{5}{14}} 
++ \frac{0}{14} log_2 \frac{\frac{0}{14}}{\frac{5}{14}\frac{4}{14}} 
++ \frac{2}{14} log_2 \frac{\frac{2}{14}}{\frac{5}{14}\frac{5}{14}} 
++ \frac{2}{14} log_2 \frac{\frac{2}{14}}{\frac{9}{14}\frac{5}{14}} 
++ \frac{4}{14} log_2 \frac{\frac{4}{14}}{\frac{9}{14}\frac{4}{14}} 
++ \frac{3}{14} log_2 \frac{\frac{3}{14}}{\frac{9}{14}\frac{5}{14}} \\
+= 0.247
+\end{aligned}$$
+
+$I(outcome, house type) =$  
+$$\begin{aligned}
+P(outcome = nothing, house type = detached) log_2 \frac{P(outcome = nothing, house type = detached)}{P(outcome = nothing)P(house type = detached)} \\
++ P(outcome = nothing, house type = semidetached) log_2 \frac{P(outcome = nothing, house type = semidetached)}{P(outcome = nothing)P(house type = semidetached)} \\
++ P(outcome = nothing, house type = terrace) log_2 \frac{P(outcome = nothing, house type = terrace)}{P(outcome = nothing)P(house type = terrace)} \\
++ P(outcome = responded, house type = detached) log_2 \frac{P(outcome = responded, house type = detached)}{P(outcome = responded)P(house type = detached)} \\
++ P(outcome = responded, house type = semidetached) log_2 \frac{P(outcome = responded, house type = semidetached)}{P(outcome = responded)P(house type = semidetached)} \\
++ P(outcome = responded, house type = terrace) log_2 \frac{P(outcome = responded, house type = terrace)}{P(outcome = responded)P(house type = terrace)} \\
+= \frac{2}{14} log_2 \frac{\frac{2}{14}}{\frac{5}{14}\frac{4}{14}} 
++ \frac{1}{14} log_2 \frac{\frac{1}{14}}{\frac{5}{14}\frac{5}{14}} 
++ \frac{2}{14} log_2 \frac{\frac{2}{14}}{\frac{5}{14}\frac{5}{14}}
++ \frac{2}{14} log_2 \frac{\frac{2}{14}}{\frac{9}{14}\frac{4}{14}} 
++ \frac{4}{14} log_2 \frac{\frac{4}{14}}{\frac{9}{14}\frac{5}{14}} 
++ \frac{3}{14} log_2 \frac{\frac{3}{14}}{\frac{9}{14}\frac{5}{14}} \\
+= 0.050
+\end{aligned}$$
+
+$I(outcome, income) =$
+$$\begin{aligned}
+P(outcome = nothing, income = high) log_2 \frac{P(outcome = nothing, income = high)}{P(outcome = nothing)P(income = high)} \\
++ P(outcome = nothing, income = low) log_2 \frac{P(outcome = nothing, income = low)}{P(outcome = nothing)P(income = low)} \\
++ P(outcome = responded, income = high) log_2 \frac{P(outcome = responded, income = high)}{P(outcome = responded)P(income = high)} \\
++ P(outcome = responded, income = low) log_2 \frac{P(outcome = responded, income = low)}{P(outcome = responded)P(income = low)} \\
+= \frac{4}{14} log_2 \frac{\frac{4}{14}}{\frac{5}{14}\frac{7}{14}} 
++ \frac{1}{14} log_2 \frac{\frac{1}{14}}{\frac{5}{14}\frac{7}{14}} 
++ \frac{3}{14} log_2 \frac{\frac{3}{14}}{\frac{9}{14}\frac{7}{14}} 
++ \frac{6}{14} log_2 \frac{\frac{6}{14}}{\frac{9}{14}\frac{7}{14}} \\ 
+= 0.152
+\end{aligned}$$
+
+$I(outcome, previous customer) =$  
+$$\begin{aligned}
+P(outcome = nothing, previous customer = no) log_2 \frac{P(outcome = nothing, previous customer = no)}{P(outcome = nothing)P(previous customer = no)} \\
++ P(outcome = nothing, previous customer = yes) log_2 \frac{P(outcome = nothing, previous customer = yes)}{P(outcome = nothing)P(previous customer = yes)} \\
++ P(outcome = responded, previous customer = no) log_2 \frac{P(outcome = responded, previous customer = no)}{P(outcome = responded)P(previous customer = no)} \\
++ P(outcome = responded, previous customer = yes) log_2 \frac{P(outcome = responded, previous customer = yes)}{P(outcome = responded)P(previous customer = yes)} \\
+= \frac{2}{14} log_2 \frac{\frac{2}{14}}{\frac{5}{14}\frac{8}{14}} 
++ \frac{3}{14} log_2 \frac{\frac{3}{14}}{\frac{5}{14}\frac{6}{14}} 
++ \frac{6}{14} log_2 \frac{\frac{6}{14}}{\frac{9}{14}\frac{8}{14}} 
++ \frac{3}{14} log_2 \frac{\frac{3}{14}}{\frac{9}{14}\frac{6}{14}} \\ 
+= 0.048
+\end{aligned}$$
+
+The greatest information content is $I(outcome, district) = 0.247$, so the first internal node will split `outcome` three ways on `district`.
+
+### Second Node Layer
+
+- `district == suburban`
+
+$I(outcome, house type | district = suburban) =$  
+$$\begin{aligned}
+P(outcome = nothing, house type = detached) log_2 \frac{P(outcome = nothing, house type = detached)}{P(outcome = nothing)P(house type = detached)} \\
++ P(outcome = nothing, house type = semidetached) log_2 \frac{P(outcome = nothing, house type = semidetached)}{P(outcome = nothing)P(house type = semidetached)} \\
++ P(outcome = nothing, house type = terrace) log_2 \frac{P(outcome = nothing, house type = terrace)}{P(outcome = nothing)P(house type = terrace)} \\
++ P(outcome = responded, house type = detached) log_2 \frac{P(outcome = responded, house type = detached)}{P(outcome = responded)P(house type = detached)} \\
++ P(outcome = responded, house type = semidetached) log_2 \frac{P(outcome = responded, house type = semidetached)}{P(outcome = responded)P(house type = semidetached)} \\
++ P(outcome = responded, house type = terrace) log_2 \frac{P(outcome = responded, house type = terrace)}{P(outcome = responded)P(house type = terrace)} \\
+= \frac{2}{5} log_2 \frac{\frac{2}{5}}{\frac{3}{5}\frac{2}{5}} 
++ \frac{0}{5} log_2 \frac{\frac{0}{5}}{\frac{3}{5}\frac{1}{5}} 
++ \frac{1}{5} log_2 \frac{\frac{1}{5}}{\frac{3}{5}\frac{2}{5}}
++ \frac{0}{5} log_2 \frac{\frac{0}{5}}{\frac{2}{5}\frac{2}{5}} 
++ \frac{1}{5} log_2 \frac{\frac{1}{5}}{\frac{2}{5}\frac{1}{5}} 
++ \frac{1}{5} log_2 \frac{\frac{1}{5}}{\frac{2}{5}\frac{2}{5}} \\
+= 0.571
+\end{aligned}$$  
+
+$I(outcome, income | district = suburban) =$  
+$$\begin{aligned}
+P(outcome = nothing, income = high) log_2 \frac{P(outcome = nothing, income = high)}{P(outcome = nothing)P(income = high)} \\
++ P(outcome = nothing, income = low) log_2 \frac{P(outcome = nothing, income = low)}{P(outcome = nothing)P(income = low)} \\
++ P(outcome = responded, income = high) log_2 \frac{P(outcome = responded, income = high)}{P(outcome = responded)P(income = high)} \\
++ P(outcome = responded, income = low) log_2 \frac{P(outcome = responded, income = low)}{P(outcome = responded)P(income = low)} \\
+= \frac{3}{5} log_2 \frac{\frac{3}{5}}{\frac{3}{5}\frac{3}{5}} 
++ \frac{0}{5} log_2 \frac{\frac{0}{5}}{\frac{3}{5}\frac{2}{5}} 
++ \frac{0}{5} log_2 \frac{\frac{0}{5}}{\frac{2}{5}\frac{3}{5}} 
++ \frac{2}{5} log_2 \frac{\frac{2}{5}}{\frac{2}{5}\frac{2}{5}} \\
+= 0.971
+\end{aligned}$$  
+
+$I(outcome, previous customer | district = suburban) =$  
+$$\begin{aligned}
+P(outcome = nothing, previous customer = no) log_2 \frac{P(outcome = nothing, previous customer = no)}{P(outcome = nothing)P(previous customer = no)} \\
++ P(outcome = nothing, previous customer = yes) log_2 \frac{P(outcome = nothing, previous customer = yes)}{P(outcome = nothing)P(previous customer = yes)} \\
++ P(outcome = responded, previous customer = no) log_2 \frac{P(outcome = responded, previous customer = no)}{P(outcome = responded)P(previous customer = no)} \\
++ P(outcome = responded, previous customer = yes) log_2 \frac{P(outcome = responded, previous customer = yes)}{P(outcome = responded)P(previous customer = yes)} \\
+= \frac{2}{5} log_2 \frac{\frac{2}{5}}{\frac{3}{5}\frac{3}{5}} 
++ \frac{1}{5} log_2 \frac{\frac{1}{5}}{\frac{3}{5}\frac{2}{5}} 
++ \frac{1}{5} log_2 \frac{\frac{1}{5}}{\frac{2}{5}\frac{3}{5}} 
++ \frac{1}{5} log_2 \frac{\frac{1}{5}}{\frac{2}{5}\frac{2}{5}} \\
+= 0.020
+\end{aligned}$$  
+
+The greatest information content is $I(outcome, income | district = suburban) = 0.971$, so the suburban internal node will split `outcome` on `income`. In fact, this split gives perfect separation, so this split will result in two leaf nodes.
+
+- `district == rural`  
+
+Since $P(outcome = responded | district = rural) = 1$, no information can be gained by splitting this node further, so this path will terminate in a leaf node.
+
+- `district == urban`
+
+$I(outcome, house type | district = urban) =$  
+$$\begin{aligned}
+P(outcome = nothing, house type = semidetached) log_2 \frac{P(outcome = nothing, house type = semidetached)}{P(outcome = nothing)P(house type = semidetached)} \\
++ P(outcome = nothing, house type = terrace) log_2 \frac{P(outcome = nothing, house type = terrace)}{P(outcome = nothing)P(house type = terrace)} \\
++ P(outcome = responded, house type = semidetached) log_2 \frac{P(outcome = responded, house type = semidetached)}{P(outcome = responded)P(house type = semidetached)} \\
++ P(outcome = responded, house type = terrace) log_2 \frac{P(outcome = responded, house type = terrace)}{P(outcome = responded)P(house type = terrace)} \\
+= \frac{1}{5} log_2 \frac{\frac{1}{5}}{\frac{2}{5}\frac{3}{5}} 
++ \frac{1}{5} log_2 \frac{\frac{1}{5}}{\frac{2}{5}\frac{2}{5}}
++ \frac{2}{5} log_2 \frac{\frac{2}{5}}{\frac{3}{5}\frac{3}{5}} 
++ \frac{1}{5} log_2 \frac{\frac{1}{5}}{\frac{3}{5}\frac{2}{5}} \\
+= 0.020
+\end{aligned}$$  
+
+$I(outcome, income | district = suburban) =$  
+$$\begin{aligned}
+P(outcome = nothing, income = high) log_2 \frac{P(outcome = nothing, income = high)}{P(outcome = nothing)P(income = high)} \\
++ P(outcome = nothing, income = low) log_2 \frac{P(outcome = nothing, income = low)}{P(outcome = nothing)P(income = low)} \\
++ P(outcome = responded, income = high) log_2 \frac{P(outcome = responded, income = high)}{P(outcome = responded)P(income = high)} \\
++ P(outcome = responded, income = low) log_2 \frac{P(outcome = responded, income = low)}{P(outcome = responded)P(income = low)} \\
+= \frac{1}{5} log_2 \frac{\frac{1}{5}}{\frac{2}{5}\frac{2}{5}} 
++ \frac{1}{5} log_2 \frac{\frac{1}{5}}{\frac{2}{5}\frac{3}{5}} 
++ \frac{1}{5} log_2 \frac{\frac{1}{5}}{\frac{3}{5}\frac{2}{5}} 
++ \frac{2}{5} log_2 \frac{\frac{2}{5}}{\frac{3}{5}\frac{3}{5}} \\
+= 0.020
+\end{aligned}$$  
+
+$I(outcome, previous customer | district = suburban) =$  
+$$\begin{aligned}
+P(outcome = nothing, previous customer = no) log_2 \frac{P(outcome = nothing, previous customer = no)}{P(outcome = nothing)P(previous customer = no)} \\
++ P(outcome = nothing, previous customer = yes) log_2 \frac{P(outcome = nothing, previous customer = yes)}{P(outcome = nothing)P(previous customer = yes)} \\
++ P(outcome = responded, previous customer = no) log_2 \frac{P(outcome = responded, previous customer = no)}{P(outcome = responded)P(previous customer = no)} \\
++ P(outcome = responded, previous customer = yes) log_2 \frac{P(outcome = responded, previous customer = yes)}{P(outcome = responded)P(previous customer = yes)} \\
+= \frac{0}{5} log_2 \frac{\frac{0}{5}}{\frac{2}{5}\frac{3}{5}} 
++ \frac{2}{5} log_2 \frac{\frac{2}{5}}{\frac{2}{5}\frac{2}{5}} 
++ \frac{3}{5} log_2 \frac{\frac{3}{5}}{\frac{3}{5}\frac{3}{5}} 
++ \frac{0}{5} log_2 \frac{\frac{0}{5}}{\frac{3}{5}\frac{2}{5}} \\
+= 0.971
+\end{aligned}$$  
+
+The greatest information content is $I(outcome, previous | district = urban) = 0.971$, so the urban internal node will split `outcome` on `previous customer`. In fact, this split gives perfect separation, so this split will result in the final two leaf nodes.
+
+## Final Decision Tree

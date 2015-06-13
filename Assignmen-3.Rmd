@@ -1,0 +1,115 @@
+---
+title: "Assignment 3"
+author: "Keith G. Williams - 800690755"
+date: "Thursday, June 04, 2015"
+output: pdf_document
+geometry: margin = 1.4cm
+---
+## Description
+
+600 cases from a defined population have been subjected to some diagnostic Test A, Test B and Test C. Suppose that 100 actually positive cases and 500 actually negative cases were ultimately found in the population studied.
+
+-    In Test A, 120 people test result was positive and 480 people test result was negative. The diagnostic test to be evaluated yielded 70 true positive (TP) decisions and 50 false positive (FP) decisions. 
+
+-	In Test B, 60 people test result was positive and 540 people test result was negative. The diagnostic test to be evaluated yielded 40 TP decisions and 20 FP decisions. 
+
+-	In Test C, 70 people test result was positive and 530 people test result was negative. The diagnostic test to be evaluated yielded 45 TP decisions and 25 FP decisions.  
+
+## Questions
+
+1)    Please first summarize these data in three separated contingency tables and calculate "Accuracy" for Test A, Test B and Test C. 
+```{r, echo=FALSE, message=FALSE}
+library(ggplot2)
+
+# create vector of observed outcomes
+observed <- factor(c(rep("pos", 100), rep("neg", 500)))
+observed <- relevel(observed, "pos")
+
+# create vector of Test A predictions
+test_A <- factor(c(rep("pos", 70), rep("neg", 480), rep("pos", 50)))
+test_A <- relevel(test_A, "pos")
+
+# create vector of Test B predictions
+test_B <- factor(c(rep("pos", 40), rep("neg", 540), rep("pos", 20)))
+test_B <- relevel(test_B, "pos")
+
+# create vector of Test C predictions
+test_C <- factor(c(rep("pos", 45), rep("neg", 530), rep("pos", 25)))
+test_C <- relevel(test_C, "pos")
+
+# create Test A contingency table
+table_A <- table(test_A, observed)
+table_A
+
+# create Test B contingency table
+table_B <- table(test_B, observed)
+table_B
+
+# create Test C contingency table
+table_C <- table(test_C, observed)
+table_C
+```
+```{r}
+# accuracy = (TP + TN) / N
+n <- 600 # total number of cases
+accuracy_A <- sum(diag(table_A)) / n 
+accuracy_B <- sum(diag(table_B)) / n
+accuracy_C <- sum(diag(table_C)) / n
+```  
+
+The accuracies for each test are summarized in the table below:  
+```{r, echo=FALSE}
+data.frame(test = c('A', 'B', 'C'), accuracy = c(accuracy_A, accuracy_B, accuracy_C))
+```  
+2)	Please compare the accuracy of Test A, B and C and tell which test is best and which test is worst?
+$$0.87 = Accuracy_A = Accuracy_B = Accuracy_C$$
+The accuracies of each diagnostic test are equal. This single metric loses some information, so an ROC curve will better differentiate the three tests.
+
+3)	Please draw simple ROC curves for Tests A, B, C. Can you tell which test is best and which test is worst based on the ROC curves?
+
+```{r, echo=FALSE, fig.height=5.5, fig.width=6}
+# calculate sensitivity and specificity for each test
+sen_A <- table_A[1, 1] / sum(table_A[, 1])
+spec_A <- table_A[2, 2] / sum(table_A[, 2])
+
+sen_B <- table_B[1, 1] / sum(table_B[, 1])
+spec_B <- table_B[2, 2] / sum(table_B[, 2])
+
+sen_C <- table_C[1, 1] / sum(table_C[, 1])
+spec_C <- table_C[2, 2] / sum(table_C[, 2])
+
+# collect data for plotting
+roc <- data.frame(test = factor(c('A', 'B', 'C')),
+                  sensitivity = c(sen_A, sen_B, sen_C),
+                  specificity = c(spec_A, spec_B, spec_C),
+                  FNF = c(1 - spec_A, 1 - spec_B, 1 - spec_C)
+                  )
+
+# create data for drawing lines
+l <- data.frame(test = factor(c(rep('A', 3), rep('B', 3), rep('C', 3))),
+                sensitivity = c(0, sen_A, 1, 0, sen_B, 1, 0, sen_C, 1),
+                FNF = c(0, 1 - spec_A, 1, 0, 1 - spec_B, 1, 0, 1 - spec_B, 1)
+                )
+
+g <- ggplot(roc, aes(FNF, sensitivity, pch=test))
+g <- g + geom_point(size = 4)
+g <- g + coord_cartesian(xlim=c(0, 1), ylim = c(0, 1))
+g <- g + scale_x_continuous(breaks = seq(0, 1, .1))
+g <- g + scale_y_continuous(breaks = seq(0, 1, .1))
+g <- g + geom_abline(intercept = 0, slope = 1, linetype=3)
+g <- g + geom_line(data=l, aes(FNF, sensitivity, group=test))
+g <- g + labs(title = "ROC Curve",
+              x = "FNF (1 - specificity)")
+g <- g + theme(text = element_text(size = 18))
+g
+```
+
+The ROC Curves give more detailed information for evaluating the three tests. The metrics for each test, including area under the ROC curve are summarized below:
+
+```{r, echo=FALSE, message=FALSE}
+library(dplyr)
+AUC <- c(0.80, 0.68, 0.70)
+mutate(roc, AUC = AUC)
+```
+
+The ROC curves show that **Test A** is the best of three tests, since its area under the curve is largest at $AUC = 0.80$. This means that in a pair of randomly selected individuals, one from the actual positive group and one from the actual negative group, the subject with the more abnormal Test A results will actually be from the positive group with probability 0.80. By similar logic, **Test B** is the least discrimating test, since its area under the curve is the lowest at $AUC = 0.68$.
