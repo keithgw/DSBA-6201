@@ -110,6 +110,12 @@ The greatest information content is $I(outcome, district) = 0.247$, so the first
 
 - `district == suburban`
 
+```{r, echo=FALSE, message=FALSE}
+library(dplyr)
+promo_suburban <- filter(promo, district=='suburban')
+promo_suburban
+```
+
 $I(outcome, house type | district = suburban) =$  
 $$\begin{aligned}
 P(outcome = nothing, house type = detached) log_2 \frac{P(outcome = nothing, house type = detached)}{P(outcome = nothing)P(house type = detached)} \\
@@ -155,11 +161,21 @@ P(outcome = nothing, previous customer = no) log_2 \frac{P(outcome = nothing, pr
 
 The greatest information content is $I(outcome, income | district = suburban) = 0.971$, so the suburban internal node will split `outcome` on `income`. In fact, this split gives perfect separation, so this split will result in two leaf nodes.
 
-- `district == rural`  
+- `district == rural`
+
+```{r, echo=FALSE}
+promo_rural <- filter(promo, district == 'rural')
+promo_rural
+```
 
 Since $P(outcome = responded | district = rural) = 1$, no information can be gained by splitting this node further, so this path will terminate in a leaf node.
 
 - `district == urban`
+
+```{r, echo=FALSE}
+promo_urban <- filter(promo, district == 'urban')
+promo_urban
+```
 
 $I(outcome, house type | district = urban) =$  
 $$\begin{aligned}
@@ -174,7 +190,7 @@ P(outcome = nothing, house type = semidetached) log_2 \frac{P(outcome = nothing,
 = 0.020
 \end{aligned}$$  
 
-$I(outcome, income | district = suburban) =$  
+$I(outcome, income | district = urban) =$  
 $$\begin{aligned}
 P(outcome = nothing, income = high) log_2 \frac{P(outcome = nothing, income = high)}{P(outcome = nothing)P(income = high)} \\
 + P(outcome = nothing, income = low) log_2 \frac{P(outcome = nothing, income = low)}{P(outcome = nothing)P(income = low)} \\
@@ -187,7 +203,7 @@ P(outcome = nothing, income = high) log_2 \frac{P(outcome = nothing, income = hi
 = 0.020
 \end{aligned}$$  
 
-$I(outcome, previous customer | district = suburban) =$  
+$I(outcome, previous customer | district = urban) =$  
 $$\begin{aligned}
 P(outcome = nothing, previous customer = no) log_2 \frac{P(outcome = nothing, previous customer = no)}{P(outcome = nothing)P(previous customer = no)} \\
 + P(outcome = nothing, previous customer = yes) log_2 \frac{P(outcome = nothing, previous customer = yes)}{P(outcome = nothing)P(previous customer = yes)} \\
